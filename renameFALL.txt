@@ -1,0 +1,116 @@
+# renameFALL.ipynb - PDF Renaming Notebook
+
+## Cell 1: Helper Functions
+# Optional helpers: make JSON-like names safe if accidentally typed unquoted in a cell
+try:
+    null
+except NameError:
+    null = None
+try:
+    true
+except NameError:
+    true = True
+try:
+    false
+except NameError:
+    false = False
+
+## Cell 2: Main PDF Renaming Logic
+from pathlib import Path
+import uuid
+import re
+
+# No file type restrictions - will rename all files
+ALLOWED_EXTENSIONS = None
+
+def prompt_for_directory() -> Path:
+    folder_input = input("Enter the path to the folder containing files to rename: ").strip().strip('"').strip("'")
+    folder_path = Path(folder_input).expanduser().resolve()
+    if not folder_path.exists():
+        raise FileNotFoundError(f"Folder does not exist: {folder_path}")
+    if not folder_path.is_dir():
+        raise NotADirectoryError(f"Not a directory: {folder_path}")
+    return folder_path
+
+def prompt_for_semester(default: str = "FALL-2024") -> str:
+    raw = input(f"Enter the semester prefix (default '{default}'): ").strip()
+    if raw.lower() in {"null", "none"}:
+        raw = ""
+    value = raw or default
+    # Sanitize for Windows-incompatible characters
+    value = re.sub(r"[\\\\/:*?\"<>|]", "_", value)
+    value = value.strip(" ") or default
+    return value
+
+def prompt_for_start_index(default: int = 1) -> int:
+    raw = input(f"Enter start index (default {default}): ").strip()
+    if raw.lower() in {"null", "none", ""}:
+        return default
+    try:
+        val = int(raw)
+        return max(1, val)  # Ensure index starts from 1
+    except ValueError:
+        return default
+
+def find_all_files(folder: Path):
+    all_files = [p for p in folder.iterdir() if p.is_file()]
+    # Sort deterministically by filename
+    all_files.sort(key=lambda p: p.name.lower())
+    return all_files
+
+def rename_files_fall_style(folder: Path, semester: str, start_index: int = 1):
+    all_files = find_all_files(folder)
+    if not all_files:
+        print("No files found to rename.")
+        return
+
+    print(f"Found {len(all_files)} file(s). Renaming to {semester}_1..{semester}_{len(all_files)} while preserving extensions...")
+
+    temp_files = []
+    # Stage 1: rename everything to unique temporary names to avoid collisions
+    for original_path in all_files:
+        temp_name = f"{original_path.stem}__TMP_RENAME__{uuid.uuid4().hex}{original_path.suffix}"
+        temp_path = original_path.with_name(temp_name)
+        original_path.rename(temp_path)
+        temp_files.append(temp_path)
+
+    # Stage 2: rename temps to final names
+    renamed_paths = []
+    try:
+        for idx, temp_path in enumerate(temp_files, start=start_index):
+            final_name = f"{semester}_{idx}{temp_path.suffix}"
+            final_path = folder / final_name
+            if final_path.exists():
+                raise FileExistsError(f"Final target already exists: {final_path}")
+            temp_path.rename(final_path)
+            renamed_paths.append(temp_path)
+    except Exception as exc:
+        print(f"Error during renaming: {exc}. Attempting best-effort rollback...")
+        # Best-effort rollback: try to remove the TMP marker from any remaining temp files
+        for path in folder.iterdir():
+            if path.is_file() and "__TMP_RENAME__" in path.name:
+                cleaned_name = path.name.replace("__TMP_RENAME__", "")
+                try:
+                    path.rename(folder / cleaned_name)
+                except Exception:
+                    pass
+        raise
+
+    print(f"Renamed {len(renamed_paths)} file(s) in: {folder}")
+    for preview in renamed_paths[:10]:
+        print(f"- {preview.name}")
+    if len(renamed_paths) > 10:
+        print("...")
+
+if __name__ == "__main__":
+    target = prompt_for_directory()
+    semester = prompt_for_semester("FALL-2024")
+    start = prompt_for_start_index(1)
+    rename_files_fall_style(target, semester, start)
+
+## Instructions to convert to notebook:
+## 1. Open Jupyter Notebook
+## 2. Create new notebook
+## 3. Copy Cell 1 content to first cell
+## 4. Copy Cell 2 content to second cell
+## 5. Save as renameFALL.ipynb

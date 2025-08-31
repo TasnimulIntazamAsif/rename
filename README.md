@@ -7,6 +7,7 @@ This project provides Jupyter notebooks to batch-rename images inside a folder. 
 - `renameCAP.ipynb`: Renames to `CAP_<PREFIX>_<index>` (e.g., `CAP_A_0`, `CAP_A_1`, …). The prefix is configurable (default shown in the notebook).
 - `renameSMALL.ipynb`: Renames to `SMALL_<prefix>_<index>` (e.g., `SMALL_z_0`, `SMALL_z_1`, …). The prefix is configurable.
 - `renameDIGIT.ipynb`: Renames to `DIGIT_<digitLabel>_<index>` (e.g., `DIGIT_0_1`, `DIGIT_0_2`, …). You choose the digit label and starting index.
+- `renameFALL.ipynb`: Renames to `FALL-2024_<index>` (e.g., `FALL-2024_1`, `FALL-2024_2`, …). The semester prefix is configurable and index starts from 1. Works with all file types.
 
 Across notebooks:
 - You input a folder path.
@@ -39,10 +40,12 @@ pip install notebook  # or: pip install jupyterlab
    - `renameCAP.ipynb` for names like `CAP_A_0` …
    - `renameSMALL.ipynb` for names like `SMALL_z_0` …
    - `renameDIGIT.ipynb` for names like `DIGIT_0_1` …
+   - `renameFALL.ipynb` for names like `FALL-2024_1` …
 3. Run all cells. When prompted, paste the absolute folder path that contains the images, for example:
    - `D:\Dataset\capital\A`
    - `D:\Dataset\Small\z`
    - `D:\Dataset\Digits\0`
+   - `D:\Dataset\Fall2024\Documents`
 4. Provide the requested prefix/label and the starting index if prompted. The notebook prints a summary of renamed files.
 
 ### Naming patterns
@@ -50,6 +53,7 @@ pip install notebook  # or: pip install jupyterlab
 - `renameCAP.ipynb`: `CAP_<Prefix>_<index>`
 - `renameSMALL.ipynb`: `SMALL_<prefix>_<index>`
 - `renameDIGIT.ipynb`: `DIGIT_<digitLabel>_<index>`
+- `renameFALL.ipynb`: `FALL-2024_<index>` (or custom semester prefix) - works with all file types
 
 The index range depends on the number of images and the start index. With 100 images and start index `0`, indices will be `0` … `99`.
 
